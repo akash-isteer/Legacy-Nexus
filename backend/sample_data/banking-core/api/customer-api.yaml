@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Customer Lookup API
+  x-api-id: API_CUSTOMER
+  version: 1.0.0
+  description: Returns customer status and mailing address held on the mainframe, used for statements and letters.
+x-legacy-programs:
+  - CUSTOMER
+paths:
+  /customers/{customerId}:
+    get:
+      operationId: getCustomer
+      summary: Get a customer's status and mailing address
+      x-legacy-program: CUSTOMER
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Customer found
+        "404":
+          description: Customer not found

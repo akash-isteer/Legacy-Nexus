@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Branch Customer API
+  x-api-id: API_BRANCH_CUSTOMER
+  version: 2.1.0
+paths:
+  /api/customers/{id}:
+    get:
+      operationId: getCustomer
+      summary: Customer profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+    delete:
+      operationId: closeCustomer
+      summary: Close a customer profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string

@@ -1,0 +1,4 @@
+# Extra packages for Azure deployments (JOB_BACKEND=servicebus, managed identity).
+# Not needed for local development, tests or air-gapped installs.
+azure-servicebus>=7.12
+azure-identity>=1.17

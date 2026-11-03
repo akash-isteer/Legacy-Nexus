@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: digital-banking
+  datasource:
+    url: jdbc:db2://mainframe.bank.local:50000/BANKDB
+    username: ${DB_USER}
+  kafka:
+    bootstrap-servers: kafka.bank.local:9092
+
+app:
+  audit:
+    base-url: https://audit.bank.local/api/v1
+  topics:
+    payments: payments-posted

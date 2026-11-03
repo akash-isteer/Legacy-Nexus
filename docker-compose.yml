@@ -1,0 +1,72 @@
+# LegacyNexus AI — local deployment (DEPLOYMENT_PROFILE=local)
+#
+#   docker compose up --build                 PostgreSQL (pgvector) + backend + web UI on http://localhost:8080
+#   docker compose --profile ai up --build    ...plus a local Ollama model server (no data leaves the machine)
+#
+# Secrets come from backend/.env (copy backend/.env.local.example). For Azure, see infra/azure/README.md:
+# the same images run there with DEPLOYMENT_PROFILE=cloud and cloud services configured by environment.
+services:
+  db:
+    image: pgvector/pgvector:pg16   # PostgreSQL 16 with the pgvector extension (semantic search)
+    environment:
+      POSTGRES_DB: legacynexus
+      POSTGRES_USER: legacynexus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-db-password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U legacynexus -d legacynexus"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        INSTALL_AZURE: "false"      # smaller image: no Azure SDKs needed locally
+    env_file: ./backend/.env
+    environment:
+      DEPLOYMENT_PROFILE: local
+      DB_HOST: db
+      DB_USER: legacynexus
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-change-me-db-password}
+      DB_NAME: legacynexus                # main database: projects, code graph, Code Q&A + its vectors
+      DOCQA_DB_NAME: legacynexus_docqa    # separate database: Document Q&A + its vectors (created on first start)
+      DB_SSLMODE: disable
+      STORAGE_DIR: /app/data/storage
+      JOB_BACKEND: inline
+      VECTOR_STORE: pgvector
+      DOCQA_VECTOR_STORE: pgvector
+      CORS_ORIGINS: http://localhost:8080
+      APP_BASE_URL: http://localhost:8080
+    volumes:
+      - storage:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.5.7
+    profiles: ["ai"]
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  storage:
+  ollama:
